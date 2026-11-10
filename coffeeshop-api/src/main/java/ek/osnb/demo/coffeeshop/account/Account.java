@@ -31,9 +31,15 @@ class Account {
        // Tom constructor - JPA-regel
     }
 
-    // Koden kan ikke oprette konto, uden alle felter udfyldt
-    private Account(String email, String passwordHash, Role role){
-        this.email = email.trim().toLowerCase(Locale.ROOT);  // gemmer mail med små bogstaver
+    // Bruges ved både gemning (constructor) og ved opslag (findByEmail)
+    // Email-regel ligger ét sted: fjerner mellemrum og laver små bogstaver
+    static String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    // Private: en konto kan kun oprettes via create, med alle felter udfyldt
+    private Account(String email, String passwordHash, Role role) {
+        this.email = normalizeEmail(email);
         this.passwordHash = passwordHash;
         this.role = role;
     }
