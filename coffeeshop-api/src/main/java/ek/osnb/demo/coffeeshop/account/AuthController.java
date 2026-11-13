@@ -33,6 +33,7 @@ class AuthController {
 
         List<String> roles = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
+                .filter(authority -> authority.startsWith("ROLE_"))
                 .toList();
 
         return new MeResponse(username, roles);
