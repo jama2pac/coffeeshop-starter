@@ -1,20 +1,14 @@
 package ek.osnb.demo.coffeeshop.customer;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-// Used both to create (POST) and to update (PUT) a customer
+// Used by PUT /api/customers/me: creates the profile the first time, updates it after that
 record CustomerRequest(
 
         @NotBlank
         @Size(max = Customer.NAME_MAX_LENGTH)
         String name,
-
-        @NotBlank
-        @Email
-        @Size(max = Customer.EMAIL_MAX_LENGTH)
-        String email,
 
         @NotBlank
         @Size(max = Customer.STREET_MAX_LENGTH)

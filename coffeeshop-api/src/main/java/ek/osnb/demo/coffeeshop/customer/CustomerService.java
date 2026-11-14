@@ -1,11 +1,9 @@
 package ek.osnb.demo.coffeeshop.customer;
 
-import ek.osnb.demo.coffeeshop.common.ConflictException;
 import ek.osnb.demo.coffeeshop.common.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -20,53 +18,28 @@ class CustomerService implements CustomerApi {
 
     // ---------- Used by CustomerController ----------
 
-    CustomerResponse create(CustomerRequest request) {
-        requireEmailIsFree(request.email());
+    // 404 until the customer has saved their profile for the first time
+    @Transactional(readOnly = true)
+    CustomerResponse findMine(String email) {
+        return repository.findByEmail(Customer.normalizeEmail(email))
+                .map(CustomerMapper::toResponse)
+                .orElseThrow(() -> new NotFoundException("There is no customer with email " + email));
+    }
 
-        Customer customer = Customer.create(
-                request.name(),
-                request.email(),
-                request.street(),
-                request.postalCode(),
-                request.city()
-        );
+    CustomerResponse saveMine(String email, CustomerRequest request) {
+        Optional<Customer> existing = repository.findByEmail(Customer.normalizeEmail(email));
 
+        // No save needed: Hibernate writes changes to a loaded entity when the transaction ends.
+        if (existing.isPresent()) {
+            Customer customer = existing.get();
+            customer.updateDetails(request.name(), email, request.street(), request.postalCode(), request.city());
+            return CustomerMapper.toResponse(customer);
+        }
+
+        Customer customer = Customer.create(request.name(), email, request.street(), request.postalCode(), request.city());
         return CustomerMapper.toResponse(repository.save(customer));
     }
 
-    @Transactional(readOnly = true)
-    CustomerResponse findById(Long id) {
-        return CustomerMapper.toResponse(findCustomer(id));
-    }
-
-    // A list with zero or one customer. A stand-in for logging in until the
-    // app has Spring Security: anyone who knows an email can find the customer.
-    @Transactional(readOnly = true)
-    List<CustomerResponse> findByEmail(String email) {
-        return repository.findByEmail(Customer.normalizeEmail(email))
-                .map(CustomerMapper::toResponse)
-                .stream()
-                .toList();
-    }
-
-    CustomerResponse update(Long id, CustomerRequest request) {
-        Customer customer = findCustomer(id);
-
-        // Changing the email is fine, but not to one another customer already uses
-        if (!customer.getEmail().equals(Customer.normalizeEmail(request.email()))) {
-            requireEmailIsFree(request.email());
-        }
-
-        customer.updateDetails(
-                request.name(),
-                request.email(),
-                request.street(),
-                request.postalCode(),
-                request.city()
-        );
-
-        return CustomerMapper.toResponse(customer);
-    }
 
     // ---------- CustomerApi: used by other features ----------
 
@@ -85,12 +58,6 @@ class CustomerService implements CustomerApi {
 
         return repository.findByEmail(Customer.normalizeEmail(email))
                 .map(CustomerMapper::toInfo);
-    }
-
-    private void requireEmailIsFree(String email) {
-        if (repository.existsByEmail(Customer.normalizeEmail(email))) {
-            throw new ConflictException("A customer with this email already exists");
-        }
     }
 
     private Customer findCustomer(Long id) {
