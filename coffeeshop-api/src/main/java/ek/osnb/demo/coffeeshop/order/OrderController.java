@@ -2,6 +2,7 @@ package ek.osnb.demo.coffeeshop.order;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,8 +27,8 @@ class OrderController {
     // Checkout: turns a cart into an order
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    OrderResponse placeOrder(@Valid @RequestBody PlaceOrderRequest request) {
-        return service.placeOrder(request);
+    OrderResponse placeOrder(Authentication authentication, @Valid @RequestBody PlaceOrderRequest request) {
+        return service.placeOrder(authentication.getName(), request);
     }
 
     // GET /api/orders?customerId=1 - newest first

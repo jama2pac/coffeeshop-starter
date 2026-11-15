@@ -2,11 +2,8 @@ package ek.osnb.demo.coffeeshop.order;
 
 import jakarta.validation.constraints.NotNull;
 
-// Ids only: the order looks up the customer, the cart and the products itself
+// Only cartId: the customer comes from the login, so no one can order in someone else's name
 record PlaceOrderRequest(
-
-        @NotNull
-        Long customerId,
 
         @NotNull
         Long cartId
