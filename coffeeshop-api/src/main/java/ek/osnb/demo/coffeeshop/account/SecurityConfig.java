@@ -40,6 +40,8 @@ class SecurityConfig {
                         .requestMatchers("/api/carts/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/register").permitAll()
                         .requestMatchers("/error", "/actuator/health").permitAll()
+                        // Staff er logget ind men har ingen customer profile, så kun customers må bruge disse endpoints
+                        .requestMatchers("/api/customers/**").hasRole("CUSTOMER")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginProcessingUrl("/api/login")
