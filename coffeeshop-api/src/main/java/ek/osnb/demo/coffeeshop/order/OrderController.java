@@ -24,7 +24,7 @@ class OrderController {
         return service.placeOrder(authentication.getName(), request);
     }
 
-    // GET /api/orders?authentication=1 - newest first
+    // GET /api/orders: only the logged-in customer's own orders, newest first
     @GetMapping
     List<OrderSummaryResponse> findMine(Authentication authentication) {
 
@@ -33,18 +33,23 @@ class OrderController {
     }
 
     @GetMapping("/{id}")
-    OrderResponse findById(@PathVariable Long id) {
-        return service.findById(id);
+    OrderResponse findById(Authentication authentication, @PathVariable Long id) {
+        return service.findById(id, authentication.getName(), isStaff(authentication));
     }
 
     @PostMapping("/{id}/cancel")
-    OrderResponse cancel(@PathVariable Long id) {
-        return service.cancel(id);
+    OrderResponse cancel(Authentication authentication, @PathVariable Long id) {
+        return service.cancel(id, authentication.getName());
     }
 
     // Should only be allowed for staff - a job for Spring Security later
     @PostMapping("/{id}/ship")
     OrderResponse ship(@PathVariable Long id) {
         return service.ship(id);
+    }
+
+    private boolean isStaff(Authentication authentication){
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_STAFF"));
     }
 }

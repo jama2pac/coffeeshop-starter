@@ -24,7 +24,7 @@ import java.util.Optional;
  * CustomerApi (who is ordering), CartApi (what is ordered) and CatalogApi (names,
  * prices and stock). The order itself only stores their ids, plus copies of the
  * values that must never change afterwards.
- *
+ * <p>
  * Serves two kinds of callers:
  * - OrderController (the REST API), with *Response records
  * - other features, through the public OrderApi interface, with *Info records
@@ -102,7 +102,7 @@ class OrderService implements OrderApi {
 
     @Transactional(readOnly = true)
     List<OrderSummaryResponse> findMine(String email) {
-        // 404 for an unknown customer instead of an empty list
+        // No profile yet means no orders: an empty list, not a 404
         Optional<CustomerInfo> customer = customers.findCustomerByEmail(email);
 
         if (customer.isEmpty()) {
@@ -120,13 +120,16 @@ class OrderService implements OrderApi {
         return summaries;
     }
 
+    // Staff may see every order, a customer only their own (someone else's gives 404)
     @Transactional(readOnly = true)
-    OrderResponse findById(Long id) {
-        return OrderMapper.toResponse(findOrder(id));
+    OrderResponse findById(Long id, String email, boolean staff) {
+        Order order = staff ? findOrder(id) : findOwnOrder(id, email);
+        return OrderMapper.toResponse(order);
     }
 
-    OrderResponse cancel(Long id) {
-        Order order = findOrder(id);
+    // Only the owner may cancel
+    OrderResponse cancel(Long id, String email) {
+        Order order = findOwnOrder(id, email);
         order.cancel();
 
         // The items go back on the shelf
@@ -182,8 +185,16 @@ class OrderService implements OrderApi {
         return result.get();
     }
 
+    private Order findOwnOrder(Long id, String email) {
+        Long customerId = requireCustomer(email).id();
+
+        return repository.findByIdAndCustomerId(id, customerId)
+                .orElseThrow(() -> new NotFoundException("Order not found: " + id));
+    }
+
     private CustomerInfo requireCustomer(String email) {
         return customers.findCustomerByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Save your delivery address before ordering"));
     }
+
 }
