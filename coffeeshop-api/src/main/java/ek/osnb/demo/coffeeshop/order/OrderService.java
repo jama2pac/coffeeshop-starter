@@ -120,6 +120,16 @@ class OrderService implements OrderApi {
         return summaries;
     }
 
+    @Transactional(readOnly = true)
+    List<OrderSummaryResponse> findAll() {
+        List<OrderSummaryResponse> summaries = new ArrayList<>();
+        for (Order order : repository.findAllByOrderByPlacedAtDesc()) {
+            summaries.add(OrderMapper.toSummary(order));
+        }
+
+        return summaries;
+    }
+
     // Staff may see every order, a customer only their own (someone else's gives 404)
     @Transactional(readOnly = true)
     OrderResponse findById(Long id, String email, boolean staff) {

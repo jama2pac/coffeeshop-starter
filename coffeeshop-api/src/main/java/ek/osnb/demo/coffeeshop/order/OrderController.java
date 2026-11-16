@@ -42,7 +42,7 @@ class OrderController {
         return service.cancel(id, authentication.getName());
     }
 
-    // Should only be allowed for staff - a job for Spring Security later
+    // Staff only: the rule is in SecurityConfig
     @PostMapping("/{id}/ship")
     OrderResponse ship(@PathVariable Long id) {
         return service.ship(id);

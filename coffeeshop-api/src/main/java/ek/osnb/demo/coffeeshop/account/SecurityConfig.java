@@ -42,6 +42,14 @@ class SecurityConfig {
                         .requestMatchers("/error", "/actuator/health").permitAll()
                         // Staff er logget ind men har ingen customer profile, så kun customers må bruge disse endpoints
                         .requestMatchers("/api/customers/**").hasRole("CUSTOMER")
+                        // Staff only: se alle ordrer også "ship"
+                        .requestMatchers("/api/staff/**").hasRole("STAFF")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/ship").hasRole("STAFF")
+                        // Customers only: place, list and cancel their own orders
+                        .requestMatchers(HttpMethod.POST, "/api/orders").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/cancel").hasRole("CUSTOMER")
+                        // GET /api/orders/{id}: alle der er logget ind, servicen tjekker owner eller staff
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginProcessingUrl("/api/login")
