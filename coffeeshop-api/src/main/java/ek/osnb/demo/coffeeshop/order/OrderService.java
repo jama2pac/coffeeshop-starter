@@ -101,9 +101,15 @@ class OrderService implements OrderApi {
     }
 
     @Transactional(readOnly = true)
-    List<OrderSummaryResponse> findByCustomer(Long customerId) {
+    List<OrderSummaryResponse> findMine(String email) {
         // 404 for an unknown customer instead of an empty list
-        customers.getCustomer(customerId);
+        Optional<CustomerInfo> customer = customers.findCustomerByEmail(email);
+
+        if (customer.isEmpty()) {
+            return List.of();
+        }
+
+        Long customerId = customer.get().id();
 
         List<OrderSummaryResponse> summaries = new ArrayList<>();
 

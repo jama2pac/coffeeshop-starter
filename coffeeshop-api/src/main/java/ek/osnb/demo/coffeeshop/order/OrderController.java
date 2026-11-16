@@ -3,14 +3,7 @@ package ek.osnb.demo.coffeeshop.order;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,10 +24,12 @@ class OrderController {
         return service.placeOrder(authentication.getName(), request);
     }
 
-    // GET /api/orders?customerId=1 - newest first
+    // GET /api/orders?authentication=1 - newest first
     @GetMapping
-    List<OrderSummaryResponse> findByCustomer(@RequestParam Long customerId) {
-        return service.findByCustomer(customerId);
+    List<OrderSummaryResponse> findMine(Authentication authentication) {
+
+        String email = authentication.getName();
+        return service.findMine(email);
     }
 
     @GetMapping("/{id}")
